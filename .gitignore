@@ -1,9 +1,38 @@
-venv/
+# ===== Python =====
 __pycache__/
-*.pyc
-.env
-db.sqlite3
-staticfiles/
-media/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ===== Django =====
 *.log
+*.pot
+*.pyc
+*.sqlite3
+db.sqlite3
+migrations/
+*.mo
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
 .DS_Store
+
+# ===== Project specific =====
+data/*.csv
+data/*.json
+.DS_Store
+*.log
+
+# ===== Elasticsearch =====
+elasticsearch/
+es_data/
