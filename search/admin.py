@@ -26,10 +26,8 @@ class ProfileAdmin(admin.ModelAdmin):
 
     list_per_page = 20
 
-    # متد کمکی برای نمایش مهارت‌ها (چون JSON است)
     def skills_preview(self, obj):
         if obj.skills:
-            # اگر لیستی از رشته‌هاست
             if isinstance(obj.skills, list) and obj.skills:
                 return ", ".join(str(s)[:20] for s in obj.skills[:3])
         return "-"

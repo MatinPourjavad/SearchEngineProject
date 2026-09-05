@@ -1,28 +1,41 @@
-from django.db.models import Q
+from .documents import ProfileDocument
 from .models import Profile
+from elasticsearch_dsl import Q
 
 
-def search_profiles(keyword=None, skill=None, title=None):
-    """
-    تابع مشترک جستجو که توسط ویوهای مختلف استفاده می‌شود
-    """
-    queryset = Profile.objects.all()
+def search_profiles(keyword=None, skill=None, title=None, country=None, industry=None):
+    s = ProfileDocument.search()
+    must_conditions = []
+    filter_conditions = []
 
-    # جستجوی کلیدواژه
     if keyword:
-        queryset = queryset.filter(
-            Q(full_name__icontains=keyword) |
-            Q(job_title__icontains=keyword) |
-            Q(skills__icontains=keyword) |
-            Q(summary__icontains=keyword)
+        must_conditions.append(
+            Q('multi_match',
+              query=keyword,
+              fields=['full_name', 'job_title', 'skills', 'summary'],
+              fuzziness='AUTO')
         )
 
-    # فیلتر مهارت (روی JSONField)
     if skill:
-        queryset = queryset.filter(skills__icontains=skill)
-
-    # فیلتر عنوان شغلی
+        filter_conditions.append(Q('match', skills=skill))
     if title:
-        queryset = queryset.filter(job_title__icontains=title)
+        filter_conditions.append(Q('match', job_title=title))
+    if country:
+        filter_conditions.append(Q('match', location_country=country))
+    if industry:
+        filter_conditions.append(Q('match', job_company_industry=industry))
 
-    return queryset
+    if must_conditions or filter_conditions:
+        s = s.query('bool', must=must_conditions, filter=filter_conditions)
+
+    response = s.execute()
+
+    profiles = []
+    for hit in response:
+        try:
+            profile = Profile.objects.get(id=hit.meta.id)
+            profiles.append(profile)
+        except Profile.DoesNotExist:
+            continue
+
+    return profiles

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: elasticsearch:7.17.25
+    container_name: es_search_engine
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  web:
+    build: .
+    container_name: django_search_engine
+    ports:
+      - "8000:8000"
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOST=http://elasticsearch:9200
+    volumes:
+      - .:/app
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py search_index --rebuild -f &&
+             python manage.py runserver 0.0.0.0:8000"
+
+volumes:
+  es_data:

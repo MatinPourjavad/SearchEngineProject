@@ -1,7 +1,7 @@
 import csv
 from ast import literal_eval
 from django.core.management.base import BaseCommand
-from search.models import Profile  # اسم اپ خودت رو جایگزین کن
+from search.models import Profile
 
 
 def clean_str(value):
@@ -32,18 +32,16 @@ class Command(BaseCommand):
     help = 'Load LinkedIn dataset from CSV into database'
 
     def handle(self, *args, **kwargs):
-        file_path = 'data/linkedin_dataset.csv'  # مسیر درست رو بذار
+        file_path = 'data/linkedin_dataset.csv'
 
         with open(file_path, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
 
-            # 🔍 دیباگ: چاپ هدرها برای اطمینان
             self.stdout.write(f"📋 ستون‌های موجود: {reader.fieldnames}")
 
             profiles = []
 
             for row in reader:
-                # فیلدهای JSON-like
                 skills = safe_literal_eval(row.get('skills'))
                 experience = safe_literal_eval(row.get('experience'))
                 education = safe_literal_eval(row.get('education'))
@@ -72,7 +70,6 @@ class Command(BaseCommand):
                     experience=experience,
                     education=education,
                     summary=clean_str(row.get('summary')),
-                    # ✅ استفاده از safe_float برای فیلدهای عددی
                     inferred_years_experience=safe_float(row.get('inferred_years_experience')),
                     linkedin_connections=safe_float(row.get('linkedin_connections')),
                     emails=emails,
@@ -80,6 +77,5 @@ class Command(BaseCommand):
                 )
                 profiles.append(profile)
 
-            # ذخیره یکجا
             Profile.objects.bulk_create(profiles)
             self.stdout.write(self.style.SUCCESS(f'✅ Successfully loaded {len(profiles)} profiles'))
